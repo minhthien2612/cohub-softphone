@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#007AFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Cohub Softphone</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+:root {
+  --blue: #007AFF;
+  --blue-dark: #0062cc;
+  --blue-soft: #e5f1ff;
+  --ink: #1d1d1f;
+  --muted: #86868b;
+  --line: #e5e5ea;
+  --surface: #ffffff;
+  --bg: #f2f2f7;
+  --green: #34c759;
+  --red: #ff3b30;
+  --orange: #ff9500;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; outline: none; border: none; background: none; }
+button { cursor: pointer; }
+
+/* PWA Container */
+.app-container {
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  max-height: 850px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  box-shadow: 0 0 40px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header PWA */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  z-index: 10;
+}
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-logo svg {
+  width: 100%;
+  height: 100%;
+}
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+.header-text b { font-size: 15px; font-weight: 700; color: #111; letter-spacing: -0.3px; }
+.header-text small { font-size: 11px; color: var(--muted); margin-top: -2px; }
+
+.status-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  background: #e8f8ed;
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Tab Bar */
+.app-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 0 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+.tab-btn .icon { font-size: 18px; }
+
+/* Main Content Area */
+.app-content {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg);
+}
+.panel {
+  display: none;
+  width: 100%;
+  min-height: 100%;
+  padding-bottom: 20px;
+}
+.panel.active { display: block; }
+
+/* ===== TAB PHONE ===== */
+.phone-ui {
+  background: #fff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+}
+.dial-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  height: 44px;
+  background: var(--bg);
+  padding: 0 8px;
+}
+.dial-input-wrap input {
+  flex: 1;
+  font-size: 18px;
+  padding: 0 8px;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+.dial-input-wrap select {
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  max-width: 100px;
+  text-align: right;
+  padding-right: 4px;
+}
+.caret { color: #aaa; font-size: 10px; pointer-events: none; }
+
+.ms-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms-key {
+  height: 50px;
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+.ms-key small { font-size: 10px; color: var(--muted); letter-spacing: 1px; line-height: 1; margin-top: 2px; }
+.ms-key:hover { background: #e5e5ea; }
+.ms-key:active { background: #d1d1d6; }
+
+.ms-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms-key.special { font-size: 18px; font-weight: 500; color: #333; background: #fff; border: 1px solid var(--line); }
+
+.ms-call-row { margin-top: 4px; }
+.ms-call-btn {
+  width: 100%; height: 52px;
+  border-radius: 14px;
+  background: var(--green); color: #fff;
+  font-size: 17px; font-weight: 600;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+  transition: background 0.2s;
+}
+.ms-call-btn:hover { background: #2db34f; }
+.ms-call-btn.active { background: var(--red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3); }
+
+.ms-slider-row {
+  display: flex; align-items: center; gap: 10px;
+  height: 36px; padding: 0 4px;
+}
+.ms-slider-row .icon-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--muted);
+  transition: all 0.2s;
+}
+.ms-slider-row .icon-btn.muted { background: #fff0f1; color: var(--red); }
+.ms-slider-row input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px; border-radius: 2px;
+  background: var(--line);
+}
+.ms-slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.ms-slider-row .sign { color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 6px; }
+
+.ms-fn-row {
+  display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;
+}
+.ms-fn-btn {
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--ink);
+  font-size: 12px; font-weight: 600;
+  padding: 6px 16px;
+  transition: all 0.2s;
+}
+.ms-fn-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* ===== TAB HISTORY ===== */
+.history-group { margin-bottom: 16px; }
+.history-group-title {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase;
+  padding: 0 16px 8px;
+  letter-spacing: 0.5px;
+}
+.history-list { display: flex; flex-direction: column; background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.history-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.history-row:last-child { border-bottom: none; }
+.history-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600;
+}
+.history-icon.in { background: #e5f1ff; color: var(--blue); }
+.history-icon.out { background: #e8f8ed; color: var(--green); }
+.history-icon.miss { background: #ffe5e5; color: var(--red); }
+.history-main { flex: 1; min-width: 0; }
+.history-main b { font-size: 14px; font-weight: 600; display: block; }
+.history-main small { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+.history-actions { display: flex; gap: 8px; align-items: center; }
+.btn-play, .btn-call {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); color: var(--muted); font-size: 14px;
+}
+.btn-play:active { background: var(--blue-soft); color: var(--blue); }
+.btn-call { background: var(--blue-soft); color: var(--blue); }
+
+/* ===== TAB CUSTOMERS ===== */
+.customer-list { display: flex; flex-direction: column; background: #fff; border-top: 1px solid var(--line); }
+.customer-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--blue-soft); color: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600;
+}
+.avatar.violet { background: #f1edff; color: #785bd6; }
+.avatar.orange { background: #fff0e3; color: #d67b25; }
+.cust-info { flex: 1; min-width: 0; }
+.cust-info b { font-size: 14px; display: block; }
+.cust-info small { font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+
+/* ===== TAB SOCIAL ===== */
+.social-tabs {
+  display: flex; padding: 12px 16px; gap: 8px;
+  overflow-x: auto; background: #fff; border-bottom: 1px solid var(--line);
+}
+.social-tabs::-webkit-scrollbar { display: none; }
+.social-tab {
+  padding: 6px 14px; border-radius: 20px;
+  background: var(--bg); color: var(--muted);
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.social-tab.active { background: var(--ink); color: #fff; }
+.social-feed { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+.feed-card {
+  background: #fff; border-radius: 12px; padding: 12px;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.feed-card.type-short { background: #000; color: #fff; }
+.feed-card.type-short .feed-title { color: #fff; }
+.feed-card.type-short .feed-desc { color: #aaa; }
+.feed-header { display: flex; align-items: center; gap: 10px; }
+.feed-header .icon { width: 24px; height: 24px; border-radius: 50%; background: #eee; display: grid; place-items: center; font-size: 12px; color: #333;}
+.feed-title { font-size: 13px; font-weight: 700; }
+.feed-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.feed-img { height: 140px; background: #e5e5ea; border-radius: 8px; display: grid; place-items: center; color: #aaa; font-size: 24px; }
+.feed-card.type-short .feed-img { background: #333; }
+
+/* Search bar */
+.search-bar {
+  padding: 8px 16px; background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.search-inner {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg); border-radius: 10px;
+  padding: 8px 12px; color: var(--muted);
+}
+.search-inner input { flex: 1; font-size: 14px; color: var(--ink); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%;
+  transform: translate(-50%, 20px);
+  opacity: 0; pointer-events: none;
+  background: rgba(30, 30, 30, 0.9);
+  color: #fff; border-radius: 20px;
+  padding: 10px 20px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+  z-index: 100;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media(max-width: 420px) {
+  .app-container { border-radius: 0; box-shadow: none; max-height: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <header class="app-header">
+    <div class="brand-logo">
+      <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cohubGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#2E65E7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00D2FF;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M 40 25 C 20 25 20 45 40 45 C 55 45 65 25 80 25 C 100 25 100 45 80 45 C 65 45 55 25 40 25 Z" fill="none" stroke="url(#cohubGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <b>Cohub Softphone</b>
+      <small>Nguyễn An · Ext 1001</small>
+    </div>
+    <div class="status-badge">
+      <span class="dot"></span> Online
+    </div>
+  </header>
+
+  <nav class="app-tabs">
+    <button class="tab-btn active" data-tab="phone">
+      <span class="icon">☎</span> Phone
+    </button>
+    <button class="tab-btn" data-tab="history">
+      <span class="icon">◷</span> Lịch sử
+    </button>
+    <button class="tab-btn" data-tab="customers">
+      <span class="icon">👤</span> Danh bạ
+    </button>
+    <button class="tab-btn" data-tab="social">
+      <span class="icon">🛍</span> Social
+    </button>
+  </nav>
+
+  <main class="app-content">
+    <!-- TAB PHONE -->
+    <section class="panel active" id="phone">
+      <div class="phone-ui">
+        <div class="dial-input-wrap">
+          <input id="dialInput" placeholder="Nhập số..." autocomplete="off" />
+          <select id="dialSelect">
+            <option value="" disabled selected>Gần đây</option>
+            <option value="0903456789">0903 456 789</option>
+            <option value="0988123456">0988 123 456</option>
+            <option value="1003">Nội bộ 1003</option>
+          </select>
+          <span class="caret">▼</span>
+        </div>
+
+        <div class="ms-keypad">
+          <button class="ms-key" data-key="1">1</button>
+          <button class="ms-key" data-key="2">2<small>ABC</small></button>
+          <button class="ms-key" data-key="3">3<small>DEF</small></button>
+          <button class="ms-key" data-key="4">4<small>GHI</small></button>
+          <button class="ms-key" data-key="5">5<small>JKL</small></button>
+          <button class="ms-key" data-key="6">6<small>MNO</small></button>
+          <button class="ms-key" data-key="7">7<small>PQRS</small></button>
+          <button class="ms-key" data-key="8">8<small>TUV</small></button>
+          <button class="ms-key" data-key="9">9<small>WXYZ</small></button>
+          <button class="ms-key" data-key="*">*</button>
+          <button class="ms-key" data-key="0">0</button>
+          <button class="ms-key" data-key="#">#</button>
+        </div>
+
+        <div class="ms-row-3">
+          <button class="ms-key special" id="redialBtn">R</button>
+          <button class="ms-key special" id="plusBtn">+</button>
+          <button class="ms-key special" id="clearBtn">C</button>
+        </div>
+
+        <div class="ms-call-row">
+          <button class="ms-call-btn" id="callBtn">Call</button>
+        </div>
+
+        <div class="ms-slider-row">
+          <button class="icon-btn" id="volIconBtn">🔊</button>
+          <span class="sign" id="volMinus">−</span>
+          <input type="range" id="volSlider" min="0" max="100" value="80" />
+          <span class="sign" id="volPlus">+</span>
+        </div>
+
+        <div class="ms-slider-row">
+          <button class="icon-btn" id="micIconBtn">🎤</button>
+          <span class="sign" id="micMinus">−</span>
+          <input type="range" id="micSlider" min="0" max="100" value="70" />
+          <span class="sign" id="micPlus">+</span>
+        </div>
+
+        <div class="ms-fn-row">
+          <button class="ms-fn-btn" id="dndBtn">DND</button>
+          <button class="ms-fn-btn" id="aaBtn">AA</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB HISTORY -->
+    <section class="panel" id="history">
+      <div class="search-bar">
+        <div class="search-inner">
+          <span>⌕</span>
+          <input placeholder="Tìm số, tên hoặc trạng thái..." id="historySearch" />
+        </div>
+      </div>
+      
+      <div class="history-group">
+        <div class="history-group-title">Hôm nay</div>
+        <div class="history-list">
+          <div class="history-row" data-search="trần minh khoa 0903456789 gọi vào">
+            <div class="history-icon in">↙</div>
+            <div class="history-main">
+              <b>Trần Minh Khoa</b>
+              <small>Gọi vào · 04:32</small>
+            </div>
+            <div class="history-actions">
+              <button class="btn-play" data-record="true" title="Nghe lại ghi âm">▶</button>
+              <button class="btn-call" data-number="0903456789">☎</button>
+            </div>
+          </div>
+          <div class="history-row" data-search="máy nhánh 1003 gọi ra">
+            <div class="history-icon out">↗</div>
+            <div class="history-main">
+              <b>Máy nhánh 1003</b>
+              <small>Nội bộ · 01:18</small>
+            </div>
+            <div class="history-actions">
+              <button class="btn-call" data-number="1003">☎</button>
+            </div>
+          </div>
+          <div class="history-row" data-search="nguyễn hoàng mai 0988123456 nhỡ">
+            <div class="history-icon miss">✕</div>
+            <div class="history-main">
+              <b>Nguyễn Hoàng Mai</b>
+              <small>0988 123 456 · Nhỡ</small>
+            </div>
+            <div class="history-actions">
+              <button class="btn-call" data-number="0988123456">☎</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-group">
+        <div class="history-group-title">Hôm qua</div>
+        <div class="history-list">
+          <div class="history-row" data-search="công ty an phúc 02873001122 gọi vào">
+            <div class="history-icon in">↙</div>
+            <div class="history-main">
+              <b>Công ty An Phúc</b>
+              <small>Gọi vào · 12:45 · 03:20</small>
+            </div>
+            <div class="history-actions">
+              <button class="btn-play" data-record="true" title="Nghe lại ghi âm">▶</button>
+              <button class="btn-call" data-number="02873001122">☎</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-group">
+        <div class="history-group-title">Tuần này</div>
+        <div class="history-list">
+          <div class="history-row" data-search="lê thu hà 0912345678 gọi ra">
+            <div class="history-icon out">↗</div>
+            <div class="history-main">
+              <b>Lê Thu Hà</b>
+              <small>Gọi ra · 02:10</small>
+            </div>
+            <div class="history-actions">
+              <button class="btn-call" data-number="0912345678">☎</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB CUSTOMERS -->
+    <section class="panel" id="customers">
+      <div class="search-bar">
+        <div class="search-inner">
+          <span>⌕</span>
+          <input placeholder="Tìm tên, số điện thoại..." id="customerSearch" />
+        </div>
+      </div>
+      <div class="customer-list">
+        <div class="customer-row">
+          <div class="avatar">MK</div>
+          <div class="cust-info">
+            <b>Trần Minh Khoa</b>
+            <small>0903 456 789 · ABC Trading</small>
+          </div>
+          <button class="btn-call" data-number="0903456789">☎</button>
+        </div>
+        <div class="customer-row">
+          <div class="avatar violet">HM</div>
+          <div class="cust-info">
+            <b>Nguyễn Hoàng Mai</b>
+            <small>0988 123 456 · Mộc Lan Spa</small>
+          </div>
+          <button class="btn-call" data-number="0988123456">☎</button>
+        </div>
+        <div class="customer-row">
+          <div class="avatar orange">AP</div>
+          <div class="cust-info">
+            <b>Công ty An Phúc</b>
+            <small>028 7300 1122 · Doanh nghiệp</small>
+          </div>
+          <button class="btn-call" data-number="02873001122">☎</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB SOCIAL -->
+    <section class="panel" id="social">
+      <div class="social-tabs">
+        <button class="social-tab active" data-filter="all">Tất cả</button>
+        <button class="social-tab" data-filter="shop">Mua sắm</button>
+        <button class="social-tab" data-filter="short">Short Video</button>
+      </div>
+      <div class="social-feed" id="socialFeed">
+        <div class="feed-card" data-type="shop">
+          <div class="feed-header">
+            <div class="icon">🛍</div>
+            <div class="feed-title">Shop Thời Trang Mộc Lan</div>
+          </div>
+          <div class="feed-desc">Sale 50% tất cả áo thun mùa hè. Mời bạn ghé thăm!</div>
+          <div class="feed-img">🖼 Hình ảnh</div>
+        </div>
+        <div class="feed-card type-short" data-type="short">
+          <div class="feed-header">
+            <div class="icon">▶</div>
+            <div class="feed-title">Mẹo chốt đơn qua Zalo</div>
+          </div>
+          <div class="feed-desc">Video ngắn: 3 bước chốt sale cực nhanh.</div>
+          <div class="feed-img">🎬 Video</div>
+        </div>
+        <div class="feed-card" data-type="shop">
+          <div class="feed-header">
+            <div class="icon">🛍</div>
+            <div class="feed-title">Gia dụng An Phúc</div>
+          </div>
+          <div class="feed-desc">Máy lọc không khí chính hãng, giảm giá sốc.</div>
+          <div class="feed-img">🖼 Hình ảnh</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let callState = false;
+let dndOn = false, aaOn = false;
+let volMuted = false, micMuted = false;
+
+function toast(msg) {
+  $('toast').textContent = msg;
+  $('toast').classList.add('show');
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2400);
+}
+
+/* Tab Switching */
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  btn.classList.add('active');
+  $(btn.dataset.tab).classList.add('active');
+}));
+
+/* Social Sub-tabs */
+document.querySelectorAll('.social-tab').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.social-tab').forEach(x => x.classList.remove('active'));
+  btn.classList.add('active');
+  const filter = btn.dataset.filter;
+  document.querySelectorAll('.feed-card').forEach(card => {
+    if (filter === 'all' || card.dataset.type === filter) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}));
+
+/* Keypad */
+document.querySelectorAll('.ms-key[data-key]').forEach(b => b.addEventListener('click', () => {
+  $('dialInput').value += b.dataset.key;
+  $('dialInput').focus();
+}));
+
+/* Dropdown */
+$('dialSelect').addEventListener('change', (e) => {
+  if (e.target.value) {
+    $('dialInput').value = e.target.value;
+    $('dialSelect').value = "";
+    $('dialInput').focus();
+    toast('Đã chọn số từ danh sách');
+  }
+});
+
+/* Special Keys */
+$('clearBtn').onclick = () => { $('dialInput').value = ''; $('dialInput').focus(); };
+$('plusBtn').onclick = () => { $('dialInput').value += '+'; $('dialInput').focus(); };
+$('redialBtn').onclick = () => { $('dialInput').value = '0903456789'; toast('Số gần nhất'); };
+
+/* Call from list -> switch to Phone Tab */
+document.querySelectorAll('[data-number]').forEach(b => b.addEventListener('click', () => {
+  $('dialInput').value = b.dataset.number;
+  document.querySelector('.tab-btn[data-tab="phone"]').click();
+  toast('Số đã sẵn sàng để gọi');
+}));
+
+/* Play Record Button */
+document.querySelectorAll('.btn-play').forEach(b => b.addEventListener('click', () => {
+  const isPlaying = b.textContent === '⏸';
+  if (isPlaying) {
+    b.textContent = '▶';
+    toast('Đã dừng phát ghi âm');
+  } else {
+    b.textContent = '⏸';
+    toast('Đang phát lại ghi âm...');
+    setTimeout(() => { b.textContent = '▶'; }, 3000);
+  }
+}));
+
+/* Search Filter */
+$('historySearch').addEventListener('input', (e) => {
+  let q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.history-group').forEach(group => {
+    let hasVisible = false;
+    group.querySelectorAll('.history-row').forEach(row => {
+      let ok = row.dataset.search.includes(q);
+      row.style.display = ok ? 'flex' : 'none';
+      if (ok) hasVisible = true;
+    });
+    group.style.display = hasVisible ? 'block' : 'none';
+  });
+});
+$('customerSearch').addEventListener('input', (e) => {
+  let q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.customer-row').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+});
+
+/* Call Button */
+$('callBtn').onclick = () => {
+  const n = $('dialInput').value.trim();
+  if (!callState) {
+    if (!n) { toast('Vui lòng nhập số'); return; }
+    callState = true;
+    $('callBtn').classList.add('active');
+    $('callBtn').textContent = 'End';
+    toast('Đang gọi ' + n);
+  } else {
+    callState = false;
+    $('callBtn').classList.remove('active');
+    $('callBtn').textContent = 'Call';
+    toast('Đã kết thúc cuộc gọi');
+  }
+};
+
+/* Buttons */
+$('dndBtn').onclick = () => { dndOn = !dndOn; $('dndBtn').classList.toggle('active', dndOn); toast(dndOn ? 'Bật DND' : 'Tắt DND'); };
+$('aaBtn').onclick = () => { aaOn = !aaOn; $('aaBtn').classList.toggle('active', aaOn); toast(aaOn ? 'Bật AA' : 'Tắt AA'); };
+
+/* Sliders */
+$('volIconBtn').onclick = () => { 
+  volMuted = !volMuted; 
+  $('volIconBtn').classList.toggle('muted', volMuted); 
+  $('volIconBtn').textContent = volMuted ? '🔇' : '🔊'; 
+};
+$('micIconBtn').onclick = () => { 
+  micMuted = !micMuted; 
+  $('micIconBtn').classList.toggle('muted', micMuted); 
+  $('micIconBtn').textContent = micMuted ? '🔇' : '🎤'; 
+};
+$('volMinus').onclick = () => { let v = $('volSlider'); v.value = Math.max(0, v.value - 10); };
+$('volPlus').onclick  = () => { let v = $('volSlider'); v.value = Math.min(100, v.value + 10); };
+$('micMinus').onclick = () => { let v = $('micSlider'); v.value = Math.max(0, v.value - 10); };
+$('micPlus').onclick  = () => { let v = $('micSlider'); v.value = Math.min(100, v.value + 10); };
+
+/* Register Service Worker for PWA */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(registration => console.log('SW registered:', registration.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

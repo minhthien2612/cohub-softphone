@@ -36,11 +36,17 @@ body {
 button, input, select { font: inherit; outline: none; border: none; background: none; }
 button { cursor: pointer; }
 
-/* PWA Container */
+/* PWA Container - Đã sửa lỗi thiếu ngoặc và thêm responsive */
 .app-container {
-  width: 100%; max-width: 420px; height: 100%; max-height: 850px;
-  display: flex; flex-direction: column; background: var(--surface);
-  box-shadow: 0 0 40px rgba(0,0,0,0.1); position: relative; overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  box-shadow: 0 0 40px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 /* Header PWA */
@@ -73,23 +79,32 @@ button { cursor: pointer; }
 .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
 
 /* Main Content Area */
-.app-content { flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; background: var(--bg); }
-.panel { display: none; width: 100%; min-height: 100%; }
-.panel.active { display: block; }
+.app-content { flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; background: var(--bg); display: flex; flex-direction: column; }
+.panel { display: none; width: 100%; flex: 1; flex-direction: column; }
+.panel.active { display: flex; }
 
 /* ===== TAB PHONE ===== */
-.phone-ui { background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.phone-ui { 
+  background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 12px; 
+  flex: 1; /* Cho phép co giãn theo chiều dọc */
+}
 .dial-input-wrap {
   display: flex; align-items: center; border: 1px solid var(--line);
   border-radius: 12px; height: 44px; background: var(--bg); padding: 0 8px;
+  flex-shrink: 0;
 }
 .dial-input-wrap input { flex: 1; font-size: 18px; padding: 0 8px; color: var(--ink); letter-spacing: 1px; }
 .dial-input-wrap select { color: var(--muted); font-size: 13px; cursor: pointer; appearance: none; max-width: 100px; text-align: right; padding-right: 4px; }
 .caret { color: #aaa; font-size: 10px; pointer-events: none; }
 
-.ms-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms-keypad { 
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; 
+  flex: 1; /* Keypad chiếm không gian còn lại */
+  grid-auto-rows: 1fr; /* Các hàng chia đều chiều cao */
+}
 .ms-key {
-  height: 50px; border-radius: 12px; background: var(--bg); color: var(--ink);
+  min-height: 50px; /* Thay vì height cố định */
+  border-radius: 12px; background: var(--bg); color: var(--ink);
   font-size: 22px; font-weight: 400; display: flex; flex-direction: column;
   align-items: center; justify-content: center; transition: background 0.1s;
 }
@@ -97,10 +112,10 @@ button { cursor: pointer; }
 .ms-key:hover { background: #e5e5ea; }
 .ms-key:active { background: #d1d1d6; }
 
-.ms-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex-shrink: 0; }
 .ms-key.special { font-size: 18px; font-weight: 500; color: #333; background: #fff; border: 1px solid var(--line); }
 
-.ms-call-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 10px; }
+.ms-call-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 10px; flex-shrink: 0; }
 .ms-fn-btn {
   border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink);
   font-size: 13px; font-weight: 600; padding: 12px 0; flex: 1; transition: all 0.2s; text-align: center;
@@ -113,7 +128,7 @@ button { cursor: pointer; }
 .ms-call-btn:hover { background: #2db34f; }
 .ms-call-btn.active { background: var(--red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3); }
 
-.ms-slider-row { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 4px; }
+.ms-slider-row { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 4px; flex-shrink: 0; }
 .ms-slider-row .icon-btn {
   width: 30px; height: 30px; border-radius: 8px; background: var(--bg);
   display: flex; align-items: center; justify-content: center;
@@ -157,17 +172,14 @@ button { cursor: pointer; }
 .history-icon-wrap.miss::after { content: '✕'; background: var(--red); color: #fff; }
 
 .history-main { flex: 1; min-width: 0; }
-/* Tên và SĐT cùng 1 dòng */
 .history-main b { 
   font-size: 14px; font-weight: 600; display: block; 
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
 }
-/* Thời gian bắt đầu cuộc gọi (ngày/tháng/năm giờ:phút:giây) */
 .history-main small { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 
 .history-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
-/* Nút Call SVG */
 .btn-call-sm {
   width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: var(--blue-soft); color: var(--blue); transition: background 0.2s;
@@ -175,7 +187,6 @@ button { cursor: pointer; }
 .btn-call-sm:hover { background: #d1e4ff; }
 .btn-call-sm svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Record Box */
 .btn-record-box {
   display: inline-flex; align-items: center; gap: 6px;
   background: #f5f5f7; border: 1px solid #e5e5ea; border-radius: 8px;
@@ -191,6 +202,7 @@ button { cursor: pointer; }
 .filter-tags {
   display: flex; padding: 8px 16px; gap: 8px;
   overflow-x: auto; background: #fff; border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .filter-tags::-webkit-scrollbar { display: none; }
 .filter-tag {
@@ -208,7 +220,7 @@ button { cursor: pointer; }
 .customer-row.hide { display: none; }
 .avatar {
   width: 36px; height: 36px; border-radius: 50%; background: var(--blue-soft); color: var(--blue);
-  display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0;
 }
 .avatar.violet { background: #f1edff; color: #785bd6; }
 .avatar.orange { background: #fff0e3; color: #d67b25; }
@@ -225,7 +237,7 @@ button { cursor: pointer; }
 .customer-detail-overlay.show { transform: translateX(0); }
 .detail-header {
   display: flex; align-items: center; padding: 12px 16px; background: #fff;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line); flex-shrink: 0;
 }
 .detail-header .back-btn { font-size: 24px; color: var(--blue); cursor: pointer; display: flex; align-items: center; margin-right: 12px; line-height: 1;}
 .detail-header b { font-size: 16px; flex: 1; }
@@ -254,7 +266,7 @@ button { cursor: pointer; }
 .social-tabs {
   display: flex; padding: 12px 16px; gap: 8px;
   overflow-x: auto; background: #fff; border-bottom: 1px solid var(--line);
-  position: sticky; top: 0; z-index: 5;
+  position: sticky; top: 0; z-index: 5; flex-shrink: 0;
 }
 .social-tabs::-webkit-scrollbar { display: none; }
 .social-tab {
@@ -262,7 +274,7 @@ button { cursor: pointer; }
   font-size: 12px; font-weight: 600; white-space: nowrap;
 }
 .social-tab.active { background: var(--ink); color: #fff; }
-.social-feed-container { padding: 12px; }
+.social-feed-container { padding: 12px; flex: 1; overflow-y: auto; }
 
 /* Shopee Grid Style */
 .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -320,7 +332,7 @@ button { cursor: pointer; }
 .tiktok-action .icon-circle { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(4px); }
 
 /* Search bar */
-.search-bar { padding: 8px 16px; background: #fff; border-bottom: 1px solid var(--line); }
+.search-bar { padding: 8px 16px; background: #fff; border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .search-inner {
   display: flex; align-items: center; gap: 6px; background: var(--bg);
   border-radius: 10px; padding: 8px 12px; color: var(--muted);
@@ -336,9 +348,59 @@ button { cursor: pointer; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ===== RESPONSIVE ===== */
 @media(max-width: 420px) {
   body { padding: 0; }
-  .app-container { border-radius: 0; box-shadow: none; max-height: none; }
+  .app-container { border-radius: 0; box-shadow: none; }
+}
+
+/* Màn hình rộng (Tablet/Desktop) */
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 900px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  }
+  
+  /* Phone tab chia 2 cột */
+  .phone-ui {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .dial-input-wrap {
+    grid-column: 1 / -1;
+  }
+  .ms-keypad {
+    grid-column: 2;
+    grid-row: 2 / span 4;
+    max-height: 400px;
+  }
+  .ms-row-3,
+  .ms-call-row {
+    grid-column: 1;
+  }
+  .ms-slider-row {
+    grid-column: 1;
+  }
+  
+  /* Customer list chia 2 cột */
+  .customer-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .customer-row {
+    border-right: 1px solid var(--line);
+  }
+  .customer-row:nth-child(2n) {
+    border-right: none;
+  }
+  
+  /* Social grid nhiều cột hơn */
+  .shop-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
 }
 </style>
 </head>
@@ -457,7 +519,6 @@ button { cursor: pointer; }
       <div class="history-group">
         <div class="history-group-title">Hôm nay</div>
         <div class="history-list">
-          <!-- Tên và SĐT cùng dòng, thời gian bắt đầu ở dưới -->
           <div class="history-row" data-search="trần minh khoa 0903456789 gọi vào">
             <div class="history-icon-wrap in">
               <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
